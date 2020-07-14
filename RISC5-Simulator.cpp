@@ -86,7 +86,7 @@ public:
     void outp(int k)
     {
         printf("~~~~~~~~~~~~~~~~~~~~~~\n");
-        for (int i = 0; i < k; i++)
+        for (int i = 16912; i < 16916; i++)
         {
             int hhh = (int(mem[i]) & all_one[8]);
             printf("(%d)", hhh);
@@ -112,7 +112,7 @@ public:
         for (int i = 0; i < k / 8; i++)
             mem[pos + i] = char((data >> (i * 8)) & all_one[8]);
     }
-}o("queens.data");
+}o("heart.data");
 class Instruction{
     /*
     * R:   0 ADD, 1 SLL, 2 SLT, 3 SLTU, 4 XOR,
@@ -140,6 +140,11 @@ public :
     {
         int _id = inst & all_one[7];
         Pc = _pc;
+        if (inst == 267388179)
+        {
+            type = 'D';
+            return;
+        }
         switch (_id)
         {
             case 51 : 
@@ -345,9 +350,9 @@ public:
     void ID() 
     { 
         reg_ID_EX = Instruction(reg_IF_ID, pc - 4);
-        if (reg_ID_EX.type == 'E')
+        if (reg_ID_EX.type == 'D')
         {
-            printf("%d\n", (ui)reg[0] & 255u);
+            printf("%d\n", (ui)reg[10] & 255u);
             exit(0);
         }
         reg_ID_EX.Rd = reg[reg_ID_EX.rd];
@@ -386,11 +391,6 @@ public:
                 switch (ins.id)
                 {
                     case 0 : 
-                        if (ins.rs1 == 0 && ins.imm == 255)
-                        {
-                            printf("%d\n", ((ui)reg[10]) & 255u);
-                            exit(0);
-                        }
                         ins.Rd = ins.Rs1 + ins.imm; 
                         break;
                     case 1 : ins.Rd = (ui)ins.Rs1 << ins.imm; break;
@@ -484,6 +484,7 @@ public:
 }simul;
 int main()
 {
+//    o.outp(0);
     while (1)
     {
 //        printf("%d,", simul.pc);
