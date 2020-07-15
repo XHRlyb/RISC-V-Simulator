@@ -78,7 +78,7 @@ class Instruction{
     * J:   JAL   (111)
     */
 public :
-    char type;
+    char type; bool skip;
     int id, imm, rd, rs1, rs2, Rd, Rs1, Rs2, Pc, Pd;
     Instruction() : type('N') {}
     Instruction(int inst) : rd(0), rs1(-1), rs2(-1), imm(0), Pd(0)
@@ -169,11 +169,11 @@ public :
 class RISCV_Simulator{
 public:
     int reg[32], reg_wor[32], pc, reg_IF_ID, MEM_cyc, reg_Pc;
-    int cnt[128];
+    int cnt[128], suc, tot;
     Instruction reg_ID_EX, reg_EX_MEM, reg_MEM_WB;
     bool ID_wor, EX_wor, MEM_wor, WB_wor;
     
-    RISCV_Simulator() : pc(0), reg_IF_ID(0), MEM_cyc(0)
+    RISCV_Simulator() : pc(0), reg_IF_ID(0), MEM_cyc(0), suc(0), tot(0)
     {
         for (int i = 0; i < 32; i++) reg[i] = reg_wor[i] = 0;
         for (int i = 0; i < 128; i++) cnt[i] = 0;
@@ -208,6 +208,10 @@ public:
                     pc = ((ins.Rs1 + ins.imm) & (~1)); 
                 break;
             case 'B' :
+                ins.skip = (cnt[ins.Pc & all_one[7]] & 2);
+                if (ins.skip) pc = ins.Pc + ins.imm;
+                    else pc = ins.Pc + 4; //????
+                tot++;
                 break;
             case 'J' : 
                 pc = ins.Pc + ins.imm; break;
@@ -278,8 +282,23 @@ public:
                 }
                 if (skip_to) 
                 {
-                    pc = ins.Pc + ins.imm; 
-                    ID_wor = false;
+                    if (ins.skip) suc++;
+                    else
+                    {
+                        pc = ins.Pc + ins.imm; 
+                        ID_wor = false;
+                    }
+                    cnt[ins.Pc & all_one[7]] = min(cnt[ins.Pc & all_one[7]] + 1, 3);
+                }
+                else
+                {
+                    if (!ins.skip) suc++;
+                    else
+                    {
+                        pc = ins.Pc + 4; 
+                        ID_wor = false;
+                    }
+                    cnt[ins.Pc & all_one[7]] = max(cnt[ins.Pc & all_one[7]] - 1, 0);
                 }
                 break;
             case 'J' : 
@@ -351,6 +370,6 @@ int main()
         simul.ID();
         simul.IF();
     }
-    printf("%d", (simul.reg[10] & 255u));
+    printf("%d\n", (simul.reg[10] & 255u));
     return 0;
 }
